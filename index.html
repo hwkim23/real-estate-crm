@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>발품CRM 매물 등록</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --green: #2D6A4F;
+    --green-light: #40916C;
+    --green-pale: #D8F3DC;
+    --green-mid: #B7E4C7;
+    --bg: #F8FAF9;
+    --surface: #FFFFFF;
+    --border: #DDE5E0;
+    --text: #1A2E25;
+    --text-sub: #4A6358;
+    --text-muted: #8AA396;
+    --danger: #C0392B;
+    --danger-pale: #FDECEA;
+    --success: #1B7A4A;
+    --success-pale: #E6F7EE;
+    --warning-pale: #FFF8E6;
+    --warning: #B07D00;
+    --radius: 10px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Pretendard', 'Apple SD Gothic Neo', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  header {
+    background: var(--green);
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  header h1 { color: #fff; font-size: 17px; font-weight: 600; }
+  header span { color: var(--green-mid); font-size: 13px; }
+
+  .container { max-width: 600px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+
+  .notice {
+    background: var(--warning-pale);
+    border: 1px solid #F0D880;
+    border-radius: var(--radius);
+    padding: 0.75rem 1rem;
+    font-size: 13px;
+    color: var(--warning);
+    margin-bottom: 1.25rem;
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+    box-shadow: var(--shadow);
+  }
+
+  .card-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    margin-bottom: 1rem;
+  }
+
+  /* API 키 입력 */
+  .api-row { display: flex; gap: 8px; }
+  .api-row input { flex: 1; }
+
+  /* 업로드 영역 */
+  .upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 2rem 1rem;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    background: var(--bg);
+  }
+  .upload-zone:hover, .upload-zone.drag { border-color: var(--green-light); background: var(--green-pale); }
+  .upload-zone svg { width: 36px; height: 36px; color: var(--text-muted); margin-bottom: 8px; }
+  .upload-zone p { font-size: 14px; color: var(--text-sub); margin-bottom: 4px; }
+  .upload-zone small { font-size: 12px; color: var(--text-muted); }
+
+  .thumb-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .thumb {
+    position: relative; width: 72px; height: 72px;
+    border-radius: 8px; overflow: hidden;
+    border: 1px solid var(--border);
+  }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .thumb button {
+    position: absolute; top: 3px; right: 3px;
+    background: rgba(0,0,0,0.5); color: #fff;
+    border: none; border-radius: 50%;
+    width: 18px; height: 18px; font-size: 11px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    padding: 0; line-height: 1;
+  }
+
+  /* 폼 필드 */
+  .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field.full { grid-column: 1 / -1; }
+  .field label { font-size: 12px; color: var(--text-sub); font-weight: 500; }
+  .field input, .field select {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 14px;
+    color: var(--text);
+    background: var(--surface);
+    width: 100%;
+    transition: border-color 0.15s;
+    font-family: inherit;
+  }
+  .field input:focus, .field select:focus {
+    outline: none;
+    border-color: var(--green-light);
+    box-shadow: 0 0 0 3px rgba(64,145,108,0.12);
+  }
+  .field input.auto { background: var(--green-pale); }
+
+  /* 버튼 */
+  .btn {
+    display: flex; align-items: center; justify-content: center;
+    gap: 6px; padding: 10px 16px; border-radius: 8px;
+    font-size: 14px; font-weight: 500; cursor: pointer;
+    border: none; transition: all 0.15s; width: 100%;
+    font-family: inherit;
+  }
+  .btn-primary { background: var(--green); color: #fff; }
+  .btn-primary:hover { background: var(--green-light); }
+  .btn-primary:disabled { background: var(--border); color: var(--text-muted); cursor: not-allowed; }
+  .btn-outline { background: var(--surface); color: var(--text-sub); border: 1px solid var(--border); }
+  .btn-outline:hover { border-color: var(--green-light); color: var(--green); }
+  .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 0.75rem; }
+  .btn-save { background: var(--green); color: #fff; margin-top: 8px; }
+  .btn-save:hover { background: var(--green-light); }
+
+  /* 상태 */
+  .status {
+    padding: 0.75rem 1rem; border-radius: 8px;
+    font-size: 14px; margin-top: 0.75rem; display: none;
+    align-items: center; gap: 8px;
+  }
+  .status.show { display: flex; }
+  .status.loading { background: #EBF4FF; color: #1A5DAD; }
+  .status.success { background: var(--success-pale); color: var(--success); }
+  .status.error { background: var(--danger-pale); color: var(--danger); }
+
+  .spinner {
+    width: 16px; height: 16px; border: 2px solid currentColor;
+    border-top-color: transparent; border-radius: 50%;
+    animation: spin 0.7s linear infinite; flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .divider { border: none; border-top: 1px solid var(--border); margin: 1rem 0; }
+
+  /* 저장 완료 배지 */
+  .id-badge {
+    display: inline-block;
+    background: var(--green-pale);
+    color: var(--green);
+    font-size: 13px; font-weight: 600;
+    padding: 3px 10px; border-radius: 20px;
+    margin-left: 6px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>발품CRM 매물 등록</h1>
+  <span>다방 스크린샷 → 매물DB 자동 저장</span>
+</header>
+
+<div class="container">
+
+  <!-- API 키 설정 -->
+  <div class="card">
+    <p class="card-title">Gemini API 키</p>
+    <div class="api-row">
+      <input type="password" id="apiKey" placeholder="AIza..." autocomplete="off">
+      <button class="btn btn-outline" style="width:auto; padding: 8px 14px;" onclick="saveKey()">저장</button>
+    </div>
+    <p style="font-size:12px; color:var(--text-muted); margin-top:6px;">키는 이 기기 브라우저에만 저장됩니다.</p>
+  </div>
+
+  <!-- 스크린샷 업로드 -->
+  <div class="card">
+    <p class="card-title">다방 스크린샷 업로드</p>
+    <div class="upload-zone" id="dropzone" onclick="document.getElementById('fileInput').click()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <path d="M4 16l4-4 4 4 4-6 4 6"/><rect x="3" y="3" width="18" height="18" rx="2"/>
+      </svg>
+      <p>스크린샷을 드래그하거나 클릭해서 업로드</p>
+      <small>여러 장 가능 — 가격정보·상세정보·위치 탭 모두 캡처 권장</small>
+    </div>
+    <input type="file" id="fileInput" multiple accept="image/*" style="display:none">
+    <div class="thumb-row" id="thumbRow"></div>
+  </div>
+
+  <!-- 분석 버튼 -->
+  <button class="btn btn-primary" id="btnAnalyze" onclick="analyze()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/><path d="M11 8v6M8 11h6"/>
+    </svg>
+    Gemini로 정보 자동 추출
+  </button>
+
+  <div class="status" id="analyzeStatus"></div>
+
+  <hr class="divider">
+
+  <!-- 추출된 필드 -->
+  <div class="card">
+    <p class="card-title">매물 정보 확인 및 수정</p>
+    <div class="field-grid">
+      <div class="field">
+        <label>매물출처</label>
+        <input id="f_source" value="다방">
+      </div>
+      <div class="field">
+        <label>거래유형</label>
+        <select id="f_tradeType">
+          <option value="">선택</option>
+          <option>전세</option>
+          <option>월세</option>
+          <option>매매</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>매물유형</label>
+        <select id="f_propType">
+          <option value="">선택</option>
+          <option>아파트</option>
+          <option>빌라</option>
+          <option>오피스텔</option>
+          <option>상가</option>
+          <option>단독주택</option>
+          <option>원룸</option>
+          <option>기타</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>층수 (해당층/총층수)</label>
+        <input id="f_floor" placeholder="예: 3층/5층">
+      </div>
+      <div class="field full">
+        <label>주소</label>
+        <input id="f_address" placeholder="서울특별시 중랑구 중화동 299-87">
+      </div>
+      <div class="field">
+        <label>매매가</label>
+        <input id="f_salePrice" placeholder="해당없으면 빈칸">
+      </div>
+      <div class="field">
+        <label>보증금</label>
+        <input id="f_deposit" placeholder="예: 1억7000">
+      </div>
+      <div class="field">
+        <label>월세</label>
+        <input id="f_monthlyRent" placeholder="예: 60만">
+      </div>
+      <div class="field">
+        <label>관리비</label>
+        <input id="f_manageFee" placeholder="예: 5만">
+      </div>
+      <div class="field">
+        <label>대출</label>
+        <input id="f_loan" placeholder="LH전세 가능 등">
+      </div>
+      <div class="field">
+        <label>공급면적 (㎡)</label>
+        <input id="f_supplyArea" placeholder="31.49">
+      </div>
+      <div class="field">
+        <label>전용면적 (㎡)</label>
+        <input id="f_netArea" placeholder="26.25">
+      </div>
+      <div class="field full">
+        <label>비고</label>
+        <input id="f_memo" placeholder="추가 메모">
+      </div>
+    </div>
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-outline" onclick="clearAll()">초기화</button>
+    <button class="btn btn-save" onclick="saveToSheet()">매물DB에 저장</button>
+  </div>
+  <div class="status" id="saveStatus"></div>
+
+</div>
+
+<script>
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxlYCuVcms9FZYWr0k81IVQmc0Qk2w0prgmqhScIZ3tyQk44gLQ8lntKqB7ahBb5Vdu/exec';
+const files = [];
+
+// API 키 로컬 저장
+function saveKey() {
+  const k = document.getElementById('apiKey').value.trim();
+  if (!k) return;
+  localStorage.setItem('gemini_key', k);
+  showStatus('analyzeStatus', 'success', 'API 키가 저장됐습니다.');
+}
+window.addEventListener('load', () => {
+  const saved = localStorage.getItem('gemini_key');
+  if (saved) document.getElementById('apiKey').value = saved;
+});
+
+// 드래그앤드롭
+const dz = document.getElementById('dropzone');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drag'));
+dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('drag'); addFiles(e.dataTransfer.files); });
+document.getElementById('fileInput').addEventListener('change', e => addFiles(e.target.files));
+
+function addFiles(newFiles) {
+  Array.from(newFiles).forEach(f => {
+    if (!f.type.startsWith('image/')) return;
+    const idx = files.length;
+    files.push(f);
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const div = document.createElement('div');
+      div.className = 'thumb';
+      div.id = 'thumb_' + idx;
+      div.innerHTML = `<img src="${ev.target.result}"><button onclick="removeFile(${idx})">✕</button>`;
+      document.getElementById('thumbRow').appendChild(div);
+    };
+    reader.readAsDataURL(f);
+  });
+}
+
+function removeFile(idx) {
+  files.splice(idx, 1);
+  const el = document.getElementById('thumb_' + idx);
+  if (el) el.remove();
+}
+
+async function fileToBase64(file) {
+  return new Promise(res => {
+    const r = new FileReader();
+    r.onload = () => res(r.result.split(',')[1]);
+    r.readAsDataURL(file);
+  });
+}
+
+// Gemini 분석
+async function analyze() {
+  const apiKey = document.getElementById('apiKey').value.trim() || localStorage.getItem('gemini_key');
+  if (!apiKey) { showStatus('analyzeStatus', 'error', 'Gemini API 키를 먼저 입력해주세요.'); return; }
+  if (files.length === 0) { showStatus('analyzeStatus', 'error', '스크린샷을 먼저 업로드해주세요.'); return; }
+
+  showStatus('analyzeStatus', 'loading', 'Gemini가 스크린샷을 분석 중입니다...');
+  document.getElementById('btnAnalyze').disabled = true;
+
+  try {
+    const parts = [];
+
+    // 이미지들
+    for (const f of files) {
+      const b64 = await fileToBase64(f);
+      parts.push({ inline_data: { mime_type: f.type, data: b64 } });
+    }
+
+    // 프롬프트
+    parts.push({ text: `다음은 다방 부동산 앱 매물 스크린샷들입니다. 아래 필드를 JSON으로만 추출해주세요. 없는 정보는 빈 문자열. 마크다운 없이 JSON만 출력.
+
+필드:
+- tradeType: 거래유형 (전세/월세/매매 중 하나)
+- propType: 매물유형 (원룸/빌라/아파트/오피스텔/상가/단독주택/기타 중 하나)
+- address: 전체 주소
+- salePrice: 매매가 (한국식 표기, 없으면 빈칸)
+- deposit: 보증금 (한국식 표기, 예: 1억7000)
+- monthlyRent: 월세 (한국식 표기, 예: 60만)
+- manageFee: 관리비 (한국식 표기, 예: 5만)
+- loan: 대출 가능 여부 또는 종류 (예: LH 전세임대 가능)
+- supplyArea: 공급면적 숫자만 (예: 31.49)
+- netArea: 전용면적 숫자만 (예: 26.25)
+- floor: 층수 (형식: 해당층/총층수, 예: 3층/5층)
+- memo: 특이사항 간단히` });
+
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts }] })
+      }
+    );
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error?.message || '알 수 없는 오류');
+
+    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    const clean = text.replace(/```json|```/g, '').trim();
+    const parsed = JSON.parse(clean);
+
+    // 필드 채우기
+    const map = {
+      tradeType: 'f_tradeType', propType: 'f_propType', address: 'f_address',
+      salePrice: 'f_salePrice', deposit: 'f_deposit', monthlyRent: 'f_monthlyRent',
+      manageFee: 'f_manageFee', loan: 'f_loan', supplyArea: 'f_supplyArea',
+      netArea: 'f_netArea', floor: 'f_floor', memo: 'f_memo'
+    };
+    Object.entries(map).forEach(([k, id]) => {
+      if (parsed[k] !== undefined && parsed[k] !== '') {
+        const el = document.getElementById(id);
+        if (el.tagName === 'SELECT') {
+          [...el.options].forEach(o => { if (o.value === parsed[k] || o.text === parsed[k]) el.value = o.value; });
+        } else {
+          el.value = parsed[k];
+          el.classList.add('auto');
+        }
+      }
+    });
+
+    showStatus('analyzeStatus', 'success', '✓ 추출 완료! 내용을 확인하고 필요하면 수정 후 저장하세요.');
+  } catch (err) {
+    showStatus('analyzeStatus', 'error', '추출 실패: ' + err.message);
+  } finally {
+    document.getElementById('btnAnalyze').disabled = false;
+  }
+}
+
+// 시트 저장
+async function saveToSheet() {
+  const payload = {
+    source:      document.getElementById('f_source').value,
+    tradeType:   document.getElementById('f_tradeType').value,
+    propType:    document.getElementById('f_propType').value,
+    address:     document.getElementById('f_address').value,
+    salePrice:   document.getElementById('f_salePrice').value,
+    deposit:     document.getElementById('f_deposit').value,
+    monthlyRent: document.getElementById('f_monthlyRent').value,
+    manageFee:   document.getElementById('f_manageFee').value,
+    loan:        document.getElementById('f_loan').value,
+    supplyArea:  document.getElementById('f_supplyArea').value,
+    netArea:     document.getElementById('f_netArea').value,
+    floor:       document.getElementById('f_floor').value,
+    memo:        document.getElementById('f_memo').value,
+  };
+
+  showStatus('saveStatus', 'loading', '매물DB에 저장 중...');
+  try {
+    const res = await fetch(WEB_APP_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (data.success) {
+      showStatus('saveStatus', 'success', `저장 완료!  매물ID: ${data.id}`);
+      clearAll();
+    } else {
+      showStatus('saveStatus', 'error', '저장 실패: ' + (data.error || '알 수 없는 오류'));
+    }
+  } catch (err) {
+    showStatus('saveStatus', 'error', '저장 실패: ' + err.message);
+  }
+}
+
+function clearAll() {
+  ['f_tradeType','f_propType','f_address','f_salePrice','f_deposit',
+   'f_monthlyRent','f_manageFee','f_loan','f_supplyArea','f_netArea','f_floor','f_memo']
+    .forEach(id => {
+      const el = document.getElementById(id);
+      el.value = '';
+      if (el.classList) el.classList.remove('auto');
+    });
+  document.getElementById('f_source').value = '다방';
+  files.length = 0;
+  document.getElementById('thumbRow').innerHTML = '';
+  document.getElementById('fileInput').value = '';
+}
+
+function showStatus(id, type, msg) {
+  const el = document.getElementById(id);
+  el.className = 'status show ' + type;
+  el.innerHTML = type === 'loading'
+    ? `<div class="spinner"></div><span>${msg}</span>`
+    : `<span>${msg}</span>`;
+}
+</script>
+</body>
+</html>
