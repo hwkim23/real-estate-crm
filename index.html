@@ -314,7 +314,7 @@
 </div>
 
 <script>
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzLiWbO8BfLF1xU-AWu3vXTdKBQiWMqlhK8w3dlZsX_0XxM7cMJD2mpNLGapgJVIbLS/exec';
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzP86euZWtwVwowzJxKdd2mAiX5IPx1yJgKmuZHfyu37U-MbE3ESU7j6EhNvrNA8TDG/exec';
 const files = [];
 
 // API 키 로컬 저장
@@ -391,16 +391,16 @@ async function analyze() {
 필드:
 - tradeType: 거래유형 (전세/월세/매매 중 하나)
 - propType: 매물유형 (아파트/오피스텔/상가/원룸/원룸(분리형)/투룸/쓰리룸 이상/기타 중 하나)
-- address: 전체 주소
-- salePrice: 매매가 (한국식 표기, 없으면 빈칸)
-- deposit: 보증금 (한국식 표기, 예: 1억7000)
-- monthlyRent: 월세 (한국식 표기, 예: 60만)
-- manageFee: 관리비 (한국식 표기, 예: 5만)
+- address: 주소 (서울특별시 중랑구는 생략하고 동/번지부터 작성. 호수가 있으면 괄호로 표기. 예: 중화동 200-12 (303호))
+- salePrice: 매매가 (원 단위 숫자로 변환 후 쉼표 포함. 예: 3억 → 300,000,000 / 없으면 빈칸)
+- deposit: 보증금 (원 단위 숫자로 변환 후 쉼표 포함. 부동산 관용 표현 주의: 1억7000 = 1억7000만원 = 170,000,000. 예: 1억7000 → 170,000,000)
+- monthlyRent: 월세 (원 단위 숫자로 변환 후 쉼표 포함. 예: 60만 → 600,000)
+- manageFee: 관리비 (원 단위 숫자로 변환 후 쉼표 포함. 예: 5만 → 50,000)
 - loan: 대출 가능 여부 또는 종류 (예: LH 전세임대 가능)
 - netArea: 전용면적 숫자만 (예: 26.25)
 - floor: 층수 (형식: 해당층/총층수, 예: 3층/5층)
 - rooms: 방수/욕실수 (형식: 방수/욕실수, 예: 1/1)
-- memo: 빈 문자열로 고정 (비고는 사용자가 직접 입력)` });
+(memo 필드는 출력하지 마세요. 비고는 사용자가 직접 입력합니다.)` });
 
     const res = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`,
@@ -424,9 +424,10 @@ async function analyze() {
       salePrice: 'f_salePrice', deposit: 'f_deposit', monthlyRent: 'f_monthlyRent',
       manageFee: 'f_manageFee', loan: 'f_loan',
       netArea: 'f_netArea', floor: 'f_floor', rooms: 'f_rooms'
-      // memo는 의도적으로 제외 (사용자 직접 입력)
+      // memo 제외: Gemini가 반환해도 무시, 사용자 직접 입력
     };
     Object.entries(map).forEach(([k, id]) => {
+      if (k === 'memo') return;  // 비고는 절대 덮어쓰지 않음
       if (parsed[k] !== undefined && parsed[k] !== '') {
         const el = document.getElementById(id);
         if (el.tagName === 'SELECT') {
