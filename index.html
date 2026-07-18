@@ -237,7 +237,14 @@
     <div class="field-grid">
       <div class="field">
         <label>매물출처</label>
-        <input id="f_source" value="자사" readonly style="background:var(--bg); color:var(--text-muted);">
+        <select id="f_source">
+          <option value="자사">자사</option>
+          <option value="외부">외부</option>
+          <option value="다방">다방</option>
+          <option value="직방">직방</option>
+          <option value="네이버">네이버</option>
+          <option value="기타">기타</option>
+        </select>
       </div>
       <div class="field">
         <label>거래유형</label>
@@ -314,7 +321,7 @@
 </div>
 
 <script>
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzP86euZWtwVwowzJxKdd2mAiX5IPx1yJgKmuZHfyu37U-MbE3ESU7j6EhNvrNA8TDG/exec';
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwVAZ46prCFjBQ-2oypIgAav74tyqngM_Nt4r0i-x0s0dFHk2BShsIN4Axssqtl27ey/exec';
 const files = [];
 
 // API 키 로컬 저장
@@ -450,7 +457,7 @@ async function analyze() {
 // 시트 저장
 async function saveToSheet() {
   const payload = {
-    source:      '자사',
+    source:      document.getElementById('f_source').value,
     tradeType:   document.getElementById('f_tradeType').value,
     propType:    document.getElementById('f_propType').value,
     address:     document.getElementById('f_address').value,
@@ -492,7 +499,7 @@ function clearAll() {
       el.value = '';
       if (el.classList) el.classList.remove('auto');
     });
-  document.getElementById('f_source').value = '자사';
+  document.getElementById('f_source').value = '';
   files.length = 0;
   document.getElementById('thumbRow').innerHTML = '';
   document.getElementById('fileInput').value = '';
