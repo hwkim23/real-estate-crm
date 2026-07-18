@@ -295,8 +295,8 @@
         <input id="f_loan" placeholder="LH전세 가능 등">
       </div>
       <div class="field">
-        <label>전용면적 (㎡)</label>
-        <input id="f_netArea" placeholder="26.25">
+        <label>전용면적 (평)</label>
+        <input id="f_netArea" placeholder="예: 7.9">
       </div>
       <div class="field">
         <label>방수/욕실수</label>
@@ -318,7 +318,7 @@
 </div>
 
 <script>
-const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwVAZ46prCFjBQ-2oypIgAav74tyqngM_Nt4r0i-x0s0dFHk2BShsIN4Axssqtl27ey/exec';
+const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwpTNuYmzX8m7ESNG8k2fYUUFMxdIXp0T1xWVc44ITUPkDcJ7Rq4Z9abOjqaC_iCCW3/exec';
 const files = [];
 
 // API 키 로컬 저장
@@ -401,7 +401,7 @@ async function analyze() {
 - monthlyRent: 월세 (원 단위 숫자로 변환 후 쉼표 포함. 예: 60만 → 600,000)
 - manageFee: 관리비 (원 단위 숫자로 변환 후 쉼표 포함. 예: 5만 → 50,000)
 - loan: 대출 가능 여부 또는 종류 (예: LH 전세임대 가능)
-- netArea: 전용면적 숫자만 (예: 26.25)
+- netArea: 전용면적을 ㎡로 읽은 뒤 평수로 변환해서 반환 (공식: ㎡ × 0.3025, 소수점 둘째자리 반올림. 예: 26.25㎡ → 7.94)
 - floor: 층수 (형식: 해당층/총층수, 예: 3층/5층)
 - rooms: 방수/욕실수 (형식: 방수/욕실수, 예: 1/1)
 (memo 필드는 출력하지 마세요. 비고는 사용자가 직접 입력합니다.)` });
@@ -442,6 +442,11 @@ async function analyze() {
         }
       }
     });
+    // netArea가 ㎡로 들어온 경우 평수로 재변환 (Gemini가 못 변환했을 때 대비)
+    if (parsed.netArea && parseFloat(parsed.netArea) > 20) {
+      // 10 초과이면 ㎡로 판단 (평수는 보통 10 이하일 수 있음)
+      document.getElementById('f_netArea').value = (parseFloat(parsed.netArea) * 0.3025).toFixed(2);
+    }
 
     showStatus('analyzeStatus', 'success', '✓ 추출 완료! 내용을 확인하고 필요하면 수정 후 저장하세요.');
   } catch (err) {
